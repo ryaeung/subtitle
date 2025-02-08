@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Subtitle Creator</title>
+    <style>
+        /* Custom font and general styles */
+        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Roboto', sans-serif;
+        }
+
+        body {
+            background-color: #e6f3ff;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+        }
+
+        /* Video container styles */
+        .video-container {
+            margin-bottom: 20px;
+            background: #f5f9ff;
+            padding: 20px;
+            border-radius: 10px;
+        }
+
+        video {
+            width: 100%;
+            border-radius: 10px;
+            background: #000;
+        }
+
+        /* Control buttons */
+        .button {
+            background: #7fb3ff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: background 0.3s;
+            margin: 5px;
+        }
+
+        .button:hover {
+            background: #5b9aff;
+        }
+
+        /* Subtitle input and display */
+        .subtitle-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        textarea {
+            width: 100%;
+            height: 300px;
+            padding: 15px;
+            border: 2px solid #7fb3ff;
+            border-radius: 10px;
+            resize: vertical;
+            font-size: 14px;
+        }
+
+        .current-subtitle {
+            background: #f5f9ff;
+            padding: 20px;
+            border-radius: 10px;
+            min-height: 100px;
+            margin-top: 20px;
+        }
+
+        /* Time display */
+        .time-display {
+            font-size: 24px;
+            text-align: center;
+            margin: 15px 0;
+            color: #4a4a4a;
+            font-weight: 500;
+        }
+
+        /* Controls container */
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin: 20px 0;
+        }
+
+        /* Download button */
+        .download-button {
+            background: #4CAF50;
+        }
+
+        .download-button:hover {
+            background: #45a049;
+        }
+
+        .break-active {
+            background: #ff7f7f;
+        }
+
+        .break-active:hover {
+            background: #ff5b5b;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="video-container">
+            <input type="file" id="videoInput" accept="video/*" class="button">
+            <video id="video" controls></video>
+            <div class="time-display" id="timeDisplay">00:00:000</div>
+        </div>
+
+        <div class="controls">
+            <button class="button" id="splitButton">Split</button>
+            <button class="button" id="breakButton">Break</button>
+            <button class="button download-button" id="generateSRT">Generate SRT</button>
+        </div>
+
+        <div class="subtitle-container">
+            <div>
+                <h3>Input Subtitles</h3>
+                <textarea id="subtitleInput" placeholder="Enter your subtitles here, one per line"></textarea>
+            </div>
+            <div>
+                <h3>Current Subtitle</h3>
+                <div class="current-subtitle" id="currentSubtitle"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Main state management
+        const state = {
+            subtitles: [],
+            currentIndex: 0,
+            timestamps: [],
+            lastTimestamp: 0,
+            isBreakActive: false,
+            breakStartTime: null,
+            hasStarted: false
+        };
+
+        // DOM elements
+        const video = document.getElementById('video');
+        const timeDisplay = document.getElementById('timeDisplay');
+        const subtitleInput = document.getElementById('subtitleInput');
+        const currentSubtitle = document.getElementById('currentSubtitle');
+        const videoInput = document.getElementById('videoInput');
+        const breakButton = document.getElementById('breakButton');
+
+        // Video file handling
+        videoInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            const videoUrl = URL.createObjectURL(file);
+            video.src = videoUrl;
+        });
+
+        // Time formatting function
+        function formatTime(milliseconds) {
+            const hours = Math.floor(milliseconds / 3600000);
+            const minutes = Math.floor((milliseconds % 3600000) / 60000);
+            const seconds = Math.floor((milliseconds % 60000) / 1000);
+            const ms = milliseconds % 1000;
+            
+            return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')},${String(ms).padStart(3, '0')}`;
+        }
+
+        // Initialize subtitles when video starts playing
+        video.addEventListener('play', () => {
+            if (!state.hasStarted && subtitleInput.value.trim()) {
+                state.subtitles = subtitleInput.value.split('\n').filter(line => line.trim());
+                currentSubtitle.textContent = state.subtitles[0] || '';
+                state.hasStarted = true;
+                state.lastTimestamp = Math.floor(video.currentTime * 1000);
+            }
+        });
+
+        // Update time display
+        video.addEventListener('timeupdate', () => {
+            const milliseconds = Math.floor(video.currentTime * 1000);
+            timeDisplay.textContent = formatTime(milliseconds);
+        });
+
+        // Split button handling
+        document.getElementById('splitButton').addEventListener('click', () => {
+            if (!state.hasStarted) {
+                state.subtitles = subtitleInput.value.split('\n').filter(line => line.trim());
+                state.hasStarted = true;
+            }
+
+            const currentTime = Math.floor(video.currentTime * 1000);
+            
+            // Add timestamp for current subtitle
+            state.timestamps.push({
+                start: state.lastTimestamp,
+                end: currentTime,
+                text: state.subtitles[state.currentIndex]
+            });
+
+            state.lastTimestamp = currentTime;
+            state.currentIndex++;
+
+            if (state.currentIndex < state.subtitles.length) {
+                currentSubtitle.textContent = state.subtitles[state.currentIndex];
+            } else {
+                currentSubtitle.textContent = 'All subtitles processed';
+            }
+        });
+
+        // Break button handling
+        breakButton.addEventListener('click', () => {
+    const currentTime = Math.floor(video.currentTime * 1000);
+    
+    if (!state.isBreakActive) {
+        // Starting a break
+        state.isBreakActive = true;
+        breakButton.textContent = 'Unbreak';
+        breakButton.classList.add('break-active');
+        
+        // Add timestamp for current subtitle up to break point
+        state.timestamps.push({
+            start: state.lastTimestamp,
+            end: currentTime,
+            text: state.subtitles[state.currentIndex]
+        });
+        
+        state.breakStartTime = currentTime;
+        currentSubtitle.textContent = '(Break)';
+    } else {
+        // Ending a break
+        state.isBreakActive = false;
+        breakButton.textContent = 'Break';
+        breakButton.classList.remove('break-active');
+        
+        state.lastTimestamp = currentTime;
+        // Advance to next subtitle immediately
+        state.currentIndex++;
+        currentSubtitle.textContent = state.currentIndex < state.subtitles.length ? 
+            state.subtitles[state.currentIndex] : 'All subtitles processed';
+    }
+});
+
+        // Generate SRT file
+        document.getElementById('generateSRT').addEventListener('click', () => {
+            let srtContent = '';
+            state.timestamps.forEach((subtitle, index) => {
+                srtContent += `${index + 1}\n`;
+                srtContent += `${formatTime(subtitle.start)} --> ${formatTime(subtitle.end)}\n`;
+                srtContent += `${subtitle.text}\n\n`;
+            });
+
+            const blob = new Blob([srtContent], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'subtitles.srt';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        });
+
+        // Reset state when new subtitle text is input
+        subtitleInput.addEventListener('input', () => {
+            state.subtitles = [];
+            state.currentIndex = 0;
+            state.timestamps = [];
+            state.lastTimestamp = 0;
+            state.hasStarted = false;
+            state.isBreakActive = false;
+            state.breakStartTime = null;
+            currentSubtitle.textContent = '';
+            breakButton.textContent = 'Break';
+            breakButton.classList.remove('break-active');
+        });
+    </script>
+</body>
+</html>

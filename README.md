@@ -6,15 +6,15 @@ Traditional subtitle creation often involves painstakingly reviewing video foota
 
 ## Getting Started: A Step-by-Step Tutorial
 
-1. **Access the Tool:** Open the `index.html` file in your web browser using the link.  You should see the Video Subtitle Timer interface.  [alt text for screenshot of main interface]
+1. **Access the Tool:** Open the `index.html` file in your web browser using the link.  You should see the Video Subtitle Timer interface.  
 
-2. **Upload Your Video:** Click the "Upload Video" button and select the video file you wish to subtitle.  The video will begin playing, and a time bar will appear, displaying the current playback time (mm:ss:ms). [alt text for screenshot showing video upload and time bar]
+2. **Upload Your Video:** Click the "Upload Video" button and select the video file you wish to subtitle.  The video will begin playing, and a time bar will appear, displaying the current playback time (mm:ss:ms). 
 
-3. **Input Your Subtitles:** In the large text box on the right, enter your premade script, each on a new line.  [alt text for screenshot showing subtitle input box]
+3. **Input Your Subtitles:** In the large text box on the right, enter your premade script, each on a new line. 
 
-4. **Timing Your Subtitles:** As the video plays, click the "Split" button to mark the end of a subtitle section. The tool automatically records the timestamp. To indicate a break in subtitles (no subtitles displayed for a period), click the "Break" button. [alt text for screenshot showing split and break buttons]
+4. **Timing Your Subtitles:** As the video plays, click the "Split" button to mark the end of a subtitle section. The tool automatically records the timestamp. To indicate a break in subtitles (no subtitles displayed for a period), click the "Break" button.
 
-5. **Generating the SRT File:** Once you have timed all your subtitles, click the "Generate SRT" button.  The tool will create an SRT file containing your subtitles and their corresponding timestamps.  You can then download this file. [alt text for screenshot showing generate SRT button and download option]
+5. **Generating the SRT File:** Once you have timed all your subtitles, click the "Generate SRT" button.  The tool will create an SRT file containing your subtitles and their corresponding timestamps.  You can then download this file.
 
 6. **Using Your SRT File:**  Import the downloaded SRT file into your video editing software or video player to add subtitles to your video.
 
